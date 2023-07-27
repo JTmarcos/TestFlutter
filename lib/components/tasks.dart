@@ -1,20 +1,30 @@
+// ignore_for_file: must_be_immutable
+
 import 'package:test/components/difficulty.dart';
 import 'package:flutter/material.dart';
+import 'package:test/data/task_dao.dart';
+
 
 class Task extends StatefulWidget {
   final String nome;
   final String foto;
   final int dificuldade;
 
-  const Task(this.nome, this.foto, this.dificuldade, {Key? key})
-      : super(key: key);
+  Task(this.nome, this.foto, this.dificuldade, {Key? key}) : super(key: key);
+
+   int nivel = 0;
 
   @override
   State<Task> createState() => _TaskState();
 }
 
 class _TaskState extends State<Task> {
-  int nivel = 0;
+  bool assetOrNetwork() {
+    if (widget.foto.contains('http')) {
+      return false;
+    }
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,10 +57,15 @@ class _TaskState extends State<Task> {
                       height: 100,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(4),
-                        child: Image.asset(
-                          widget.foto,
-                          fit: BoxFit.cover,
-                        ),
+                        child: assetOrNetwork()
+                            ? Image.asset(
+                                widget.foto,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.network(
+                                widget.foto,
+                                fit: BoxFit.cover,
+                              ),
                       ),
                     ),
                     Column(
@@ -66,7 +81,8 @@ class _TaskState extends State<Task> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             )),
-                        Difficulty(dificultyLevel: widget.dificuldade,
+                        Difficulty(
+                          dificultyLevel: widget.dificuldade,
                         ),
                       ],
                     ),
@@ -74,11 +90,20 @@ class _TaskState extends State<Task> {
                       height: 52,
                       width: 52,
                       child: ElevatedButton(
-                          onPressed: () {
+                        onLongPress: () {
+                          setState(() {
+                            removerTarefa(context);
+                          });
+                          
+                        },
+                          onPressed: () async{
                             setState(() {
-                              nivel++;
+                              widget.nivel++;
                             });
-                            // print(nivel);
+                             
+                               
+                            
+                            
                           },
                           child: const Column(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -105,7 +130,7 @@ class _TaskState extends State<Task> {
                       child: LinearProgressIndicator(
                         color: Colors.white,
                         value: (widget.dificuldade > 0)
-                            ? (nivel / widget.dificuldade) / 10
+                            ? (widget.nivel / widget.dificuldade) / 10
                             : 1,
                       ),
                     ),
@@ -113,7 +138,9 @@ class _TaskState extends State<Task> {
                   Padding(
                     padding: const EdgeInsets.all(12),
                     child: Text(
-                      'Nivel: $nivel',
+                      widget.nivel < widget.dificuldade * 10 ?
+                      'Nivel: ${widget.nivel}' : 
+                      "Nivel: Max",
                       style: const TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   )
@@ -125,4 +152,37 @@ class _TaskState extends State<Task> {
       ),
     );
   }
+  void removerTarefa(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Text('Deletar'),
+              Icon(Icons.delete_forever),
+            ],
+          ),
+          content: const Text('Tem certeza de que deseja deletar essa tarefa?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            TextButton(
+                child: const Text('Deletar'),
+                onPressed: () {
+                  TaskDao().delete(widget.nome);
+                  Navigator.pop(context);
+                }),
+          ],
+        );
+      },
+    );
+  }
+
 }
+
+

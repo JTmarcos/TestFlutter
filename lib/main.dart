@@ -1,4 +1,4 @@
-import 'package:test/data/task_inherited.dart';
+
 import 'package:test/screens/tela_inicial.dart';
 import 'package:flutter/material.dart';
 
@@ -16,7 +16,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: TaskInherited(child: const InitialScreen()),
+      home:  const InitialScreen()
     );
   }
 }
+
+
+
